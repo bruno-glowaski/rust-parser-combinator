@@ -13,32 +13,27 @@ fn the_letter_a(input: &str) -> Result<(&str, ()), &str> {
 }
 
 fn match_literal(expected: &'static str) -> impl Fn(&str) -> Result<(&str, ()), &str> {
-    move |input: &str| match input.get(0..expected.len()) {
-        Some(next) if next == expected => Ok((&input[expected.len()..], ())),
+    // move |input: &str| match input.get(0..expected.len()) {
+    //     Some(next) if next == expected => Ok((&input[expected.len()..], ())),
+    //     _ => Err(input),
+    // }
+    move |input: &str| match input.strip_prefix(expected) {
+        Some(remainder) => Ok((remainder, ())),
         _ => Err(input),
     }
 }
 
 #[test]
 fn a_parser() {
-    assert_eq!(the_letter_a("a"), Ok(("",())));
-    assert_eq!(the_letter_a("abc"), Ok(("bc",())));
+    assert_eq!(the_letter_a("a"), Ok(("", ())));
+    assert_eq!(the_letter_a("abc"), Ok(("bc", ())));
     assert_eq!(the_letter_a("cba"), Err("cba"));
 }
 
 #[test]
 fn literal_parser() {
     let parse_joe = match_literal("Joe");
-    assert_eq!(
-        parse_joe("Joe"),
-        Ok(("",())),
-    );
-    assert_eq!(
-        parse_joe("Joe! Joseph!"),
-        Ok(("! Joseph!",())),
-    );
-    assert_eq!(
-        parse_joe("Robert"),
-        Err("Robert"),
-    );
+    assert_eq!(parse_joe("Joe"), Ok(("", ())),);
+    assert_eq!(parse_joe("Joe! Joseph!"), Ok(("! Joseph!", ())),);
+    assert_eq!(parse_joe("Robert"), Err("Robert"),);
 }
