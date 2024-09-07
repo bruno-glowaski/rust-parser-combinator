@@ -49,6 +49,14 @@ fn pair_combinator() {
 }
 
 #[test]
+fn zero_or_more_combinator() {
+    let parser = zero_or_more(match_literal("ha"));
+    assert_eq!(Ok(("", vec![(), (), ()])), parser.parse("hahaha"));
+    assert_eq!(Ok(("", vec![])), parser.parse(""));
+    assert_eq!(Ok(("ahah", vec![])), parser.parse("ahah"));
+}
+
+#[test]
 fn one_or_more_combinator() {
     let parser = one_or_more(match_literal("ha"));
     assert_eq!(Ok(("", vec![(), (), ()])), parser.parse("hahaha"));
