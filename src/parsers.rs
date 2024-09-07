@@ -165,3 +165,16 @@ pub fn space0<'a>() -> impl Parser<'a, Vec<char>> {
 pub fn space1<'a>() -> impl Parser<'a, Vec<char>> {
     one_or_more(whitespace())
 }
+
+pub fn quoted_string<'a>() -> impl Parser<'a, String> {
+    map(
+        right(
+            match_literal("\""),
+            left(
+                zero_or_more(pred(any_char, |c| *c != '"')),
+                match_literal("\""),
+            ),
+        ),
+        |chars| chars.into_iter().collect(),
+    )
+}

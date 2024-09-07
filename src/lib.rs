@@ -70,3 +70,11 @@ fn predicate_combinator() {
     assert_eq!(Ok(("mg", 'o')), parser.parse("omg"));
     assert_eq!(Err("lol"), parser.parse("lol"));
 }
+
+#[test]
+fn quoted_string_parser() {
+    assert_eq!(
+        Ok(("", "Hello Joe!".to_string())),
+        quoted_string().parse("\"Hello Joe!\"")
+    );
+}
