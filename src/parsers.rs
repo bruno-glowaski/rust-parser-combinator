@@ -166,4 +166,19 @@ pub fn space1<'a>() -> impl Parser<'a, Vec<char>> {
     one_or_more(whitespace())
 }
 
+pub fn either<'a, P1, P2, A>(parser1: P1, parser2: P2) -> impl Parser<'a, A>
+where
+    P1: Parser<'a, A>,
+    P2: Parser<'a, A>,
+{
+    move |input| parser1.parse(input).or_else(|_| parser2.parse(input))
+}
+
+pub fn and_then<'a, P, Q, F, A, B>(parser: P, f: F) -> impl Parser<'a, B>
+where
+    P: Parser<'a, A>,
+    Q: Parser<'a, B>,
+    F: Fn(A) -> Q,
+{
+    move |input| parser.parse(input).and_then(|(next, result)| f(result).parse(next))
 }

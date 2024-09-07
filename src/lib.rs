@@ -53,6 +53,25 @@ pub fn open_element<'a>() -> impl Parser<'a, Element> {
     })
 }
 
+pub fn close_element<'a>(expected_name: String) -> impl Parser<'a, String> {
+    pred(right(match_literal("</"), left(identifier, match_literal(">"))),
+        move |name| name == &expected_name)
+}
+
+pub fn parent_element<'a>() -> impl Parser<'a, Element> {
+    and_then(open_element(), |el| {
+        map(left(zero_or_more(element()), close_element(el.name.clone())), move |children| {
+            let mut el = el.clone();
+            el.children = children;
+            el
+        })
+    })
+}
+
+pub fn element<'a>() -> impl Parser<'a, Element> {
+    either(single_element(), parent_element())
+}
+
 #[test]
 fn a_parser() {
     assert_eq!(the_letter_a("a"), Ok(("", ())));
