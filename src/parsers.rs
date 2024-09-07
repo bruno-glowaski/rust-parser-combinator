@@ -20,6 +20,13 @@ pub fn the_letter_a(input: &str) -> ParseResult<()> {
     }
 }
 
+pub fn any_char(input: &str) -> ParseResult<char> {
+    match input.chars().next() {
+        Some(c) => Ok((&input[c.len_utf8()..], c)),
+        _ => Err(input),
+    }
+}
+
 pub fn identifier(input: &str) -> ParseResult<String> {
     let mut matched = String::new();
     let mut chars = input.chars();
@@ -130,4 +137,31 @@ where
 
         Ok((input, result))
     }
+}
+
+pub fn pred<'a, P, A, F>(parser: P, predicate: F) -> impl Parser<'a, A>
+where
+    P: Parser<'a, A>,
+    F: Fn(&A) -> bool,
+{
+    move |input| {
+        if let Ok((next, value)) = parser.parse(input) {
+            if predicate(&value) {
+                return Ok((next, value));
+            }
+        }
+        Err(input)
+    }
+}
+
+pub fn whitespace<'a>() -> impl Parser<'a, char> {
+    pred(any_char, |c| c.is_whitespace())
+}
+
+pub fn space0<'a>() -> impl Parser<'a, Vec<char>> {
+    zero_or_more(whitespace())
+}
+
+pub fn space1<'a>() -> impl Parser<'a, Vec<char>> {
+    one_or_more(whitespace())
 }

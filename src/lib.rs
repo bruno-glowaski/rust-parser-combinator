@@ -63,3 +63,10 @@ fn one_or_more_combinator() {
     assert_eq!(Err(""), parser.parse(""));
     assert_eq!(Err("ahah"), parser.parse("ahah"));
 }
+
+#[test]
+fn predicate_combinator() {
+    let parser = pred(any_char, |c| *c == 'o');
+    assert_eq!(Ok(("mg", 'o')), parser.parse("omg"));
+    assert_eq!(Err("lol"), parser.parse("lol"));
+}
