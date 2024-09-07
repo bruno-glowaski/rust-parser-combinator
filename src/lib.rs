@@ -46,6 +46,20 @@ fn identifier(input: &str) -> Result<(&str, String), &str> {
     Ok((&input[next_index..], matched))
 }
 
+fn pair<P1, P2, R1, R2>(parser1: P1, parser2: P2) -> impl Fn(&str) -> Result<(&str, (R1, R2)), &str>
+where
+    P1: Fn(&str) -> Result<(&str, R1), &str>,
+    P2: Fn(&str) -> Result<(&str, R2), &str>,
+{
+    move |input: &str| match parser1(input) {
+        Ok((next_input, result1)) => match parser2(next_input) {
+            Ok((remainder, result2)) => Ok((remainder, (result1, result2))),
+            Err(err) => Err(err),
+        },
+        Err(err) => Err(err),
+    }
+}
+
 #[test]
 fn a_parser() {
     assert_eq!(the_letter_a("a"), Ok(("", ())));
@@ -74,4 +88,13 @@ fn identifier_parser() {
     assert_eq!(Err("!not an identifier"), identifier("!not an identifier"));
 }
 
+#[test]
+fn pair_combinator() {
+    let tag_opener = pair(match_literal("<"), identifier);
+    assert_eq!(
+        Ok(("/>", ((), "my-first-element".to_string()))),
+        tag_opener("<my-first-element/>")
+    );
+    assert_eq!(Err("oops"), tag_opener("oops"));
+    assert_eq!(Err("!oops"), tag_opener("<!oops"));
 }
