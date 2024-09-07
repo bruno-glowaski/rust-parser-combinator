@@ -72,7 +72,7 @@ pub fn parent_element<'a>() -> impl Parser<'a, Element> {
 }
 
 pub fn element<'a>() -> impl Parser<'a, Element> {
-    either(single_element(), parent_element())
+    whitespace_wrap(either(single_element(), parent_element()))
 }
 
 #[test]

@@ -215,6 +215,13 @@ pub fn space1<'a>() -> impl Parser<'a, Vec<char>> {
     one_or_more(whitespace())
 }
 
+pub fn whitespace_wrap<'a, P, A>(parser: P)  -> impl Parser<'a, A>
+where
+    P: Parser<'a, A>,
+{
+    right(space0(), left(parser, space0()))
+}
+
 pub fn either<'a, P1, P2, A>(parser1: P1, parser2: P2) -> impl Parser<'a, A>
 where
     P1: Parser<'a, A>,
