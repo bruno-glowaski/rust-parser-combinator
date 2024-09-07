@@ -2,6 +2,37 @@ pub type ParseResult<'a, Output> = Result<(&'a str, Output), &'a str>;
 
 pub trait Parser<'a, Output> {
     fn parse(&self, input: &'a str) -> ParseResult<'a, Output>;
+
+    // TODO: Try creating a standalone type for each of this combinators.
+    fn map<F, NewOutput>(self, map_fn: F) -> BoxedParser<'a, NewOutput>
+    where
+        Self: Sized + 'a,
+        Output: 'a,
+        NewOutput: 'a,
+        F: Fn(Output) -> NewOutput + 'a,
+    {
+        BoxedParser::new(map(self, map_fn))
+    }
+
+    fn pred<F>(self, pred_fn: F) -> BoxedParser<'a, Output>
+    where
+        Self: Sized + 'a,
+        Output: 'a,
+        F: Fn(&Output) -> bool + 'a,
+    {
+        BoxedParser::new(pred(self, pred_fn))
+    }
+
+    fn and_then<F, NextParser, NewOutput>(self, f: F) -> BoxedParser<'a, NewOutput>
+    where
+        Self: Sized + 'a,
+        Output: 'a,
+        NewOutput: 'a,
+        NextParser: Parser<'a, NewOutput> + 'a,
+        F: Fn(Output) -> NextParser + 'a,
+    {
+        BoxedParser::new(and_then(self, f))
+    }
 }
 
 impl<'a, F, Output> Parser<'a, Output> for F
@@ -10,6 +41,24 @@ where
 {
     fn parse(&self, input: &'a str) -> ParseResult<'a, Output> {
         self(input)
+    }
+}
+
+pub struct BoxedParser<'a, Output> {
+    parser: Box<dyn Parser<'a, Output> + 'a>,
+}
+
+impl<'a, Output> BoxedParser<'a, Output> {
+    pub fn new<P: Parser<'a, Output> + 'a>(parser: P) -> Self {
+        BoxedParser {
+            parser: Box::new(parser),
+        }
+    }
+}
+
+impl<'a, Output> Parser<'a, Output> for BoxedParser<'a, Output> {
+    fn parse(&self, input: &'a str) -> ParseResult<'a, Output> {
+        self.parser.parse(input)
     }
 }
 
@@ -180,5 +229,9 @@ where
     Q: Parser<'a, B>,
     F: Fn(A) -> Q,
 {
-    move |input| parser.parse(input).and_then(|(next, result)| f(result).parse(next))
+    move |input| {
+        parser
+            .parse(input)
+            .and_then(|(next, result)| f(result).parse(next))
+    }
 }

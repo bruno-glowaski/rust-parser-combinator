@@ -10,16 +10,14 @@ pub struct Element {
 }
 
 pub fn quoted_string<'a>() -> impl Parser<'a, String> {
-    map(
-        right(
+    right(
+        match_literal("\""),
+        left(
+            zero_or_more(pred(any_char, |c| *c != '"')),
             match_literal("\""),
-            left(
-                zero_or_more(pred(any_char, |c| *c != '"')),
-                match_literal("\""),
-            ),
         ),
-        |chars| chars.into_iter().collect(),
     )
+    .map(|chars| chars.into_iter().collect())
 }
 
 pub fn attribute_pair<'a>() -> impl Parser<'a, (String, String)> {
@@ -35,36 +33,41 @@ pub fn element_start<'a>() -> impl Parser<'a, (String, Vec<(String, String)>)> {
 }
 
 pub fn single_element<'a>() -> impl Parser<'a, Element> {
-    map(
-        left(element_start(), match_literal("/>")),
-        |(name, attributes)| Element { 
-            name, 
-            attributes, 
-            children: vec![],
-        }
-    )
-}
-
-pub fn open_element<'a>() -> impl Parser<'a, Element> {
-    map(left(element_start(), match_literal(">")), |(name, attributes)| Element {
+    left(element_start(), match_literal("/>")).map(|(name, attributes)| Element {
         name,
         attributes,
         children: vec![],
     })
 }
 
+pub fn open_element<'a>() -> impl Parser<'a, Element> {
+    map(
+        left(element_start(), match_literal(">")),
+        |(name, attributes)| Element {
+            name,
+            attributes,
+            children: vec![],
+        },
+    )
+}
+
 pub fn close_element<'a>(expected_name: String) -> impl Parser<'a, String> {
-    pred(right(match_literal("</"), left(identifier, match_literal(">"))),
-        move |name| name == &expected_name)
+    right(
+        match_literal("</"),
+        left(identifier, match_literal(">")).pred(move |name| name == &expected_name),
+    )
 }
 
 pub fn parent_element<'a>() -> impl Parser<'a, Element> {
-    and_then(open_element(), |el| {
-        map(left(zero_or_more(element()), close_element(el.name.clone())), move |children| {
-            let mut el = el.clone();
-            el.children = children;
-            el
-        })
+    open_element().and_then(|el| {
+        map(
+            left(zero_or_more(element()), close_element(el.name.clone())),
+            move |children| {
+                let mut el = el.clone();
+                el.children = children;
+                el
+            },
+        )
     })
 }
 
