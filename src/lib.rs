@@ -47,3 +47,11 @@ fn pair_combinator() {
     assert_eq!(Err("oops"), tag_opener.parse("oops"));
     assert_eq!(Err("!oops"), tag_opener.parse("<!oops"));
 }
+
+#[test]
+fn one_or_more_combinator() {
+    let parser = one_or_more(match_literal("ha"));
+    assert_eq!(Ok(("", vec![(), (), ()])), parser.parse("hahaha"));
+    assert_eq!(Err(""), parser.parse(""));
+    assert_eq!(Err("ahah"), parser.parse("ahah"));
+}

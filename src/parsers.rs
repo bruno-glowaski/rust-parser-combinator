@@ -91,3 +91,26 @@ where
 {
     map(pair(parser1, parser2), |(_, r)| r)
 }
+
+pub fn one_or_more<'a, P, A>(parser: P) -> impl Parser<'a, Vec<A>>
+where
+    P: Parser<'a, A>,
+{
+    move |mut input| {
+        let mut result = Vec::new();
+
+        if let Ok((next, first)) = parser.parse(input) {
+            input = next;
+            result.push(first);
+        } else {
+            return Err(input);
+        }
+
+        while let Ok((next, item)) = parser.parse(input) {
+            input = next;
+            result.push(item);
+        }
+
+        Ok((input, result))
+    }
+}
