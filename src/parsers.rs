@@ -178,3 +178,11 @@ pub fn quoted_string<'a>() -> impl Parser<'a, String> {
         |chars| chars.into_iter().collect(),
     )
 }
+
+pub fn attribute_pair<'a>() -> impl Parser<'a, (String, String)> {
+    pair(identifier, right(match_literal("="), quoted_string()))
+}
+
+pub fn attributes<'a>() -> impl Parser<'a, Vec<(String, String)>> {
+    zero_or_more(right(space1(), attribute_pair()))
+}

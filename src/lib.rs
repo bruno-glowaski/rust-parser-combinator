@@ -78,3 +78,17 @@ fn quoted_string_parser() {
         quoted_string().parse("\"Hello Joe!\"")
     );
 }
+
+#[test]
+fn attribute_parser() {
+    assert_eq!(
+        Ok((
+            "",
+            vec![
+                ("one".to_string(), "1".to_string()),
+                ("two".to_string(), "2".to_string()),
+            ]
+        )),
+        attributes().parse(" one=\"1\" two=\"2\"")
+    );
+}
