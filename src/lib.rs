@@ -3,10 +3,21 @@ mod parsers;
 pub use parsers::*;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-struct Element {
+pub struct Element {
     name: String,
     attributes: Vec<(String, String)>,
     children: Vec<Element>,
+}
+
+pub fn single_element<'a>() -> impl Parser<'a, Element> {
+    map(
+        left(element_start(), match_literal("/>")),
+        |(name, attributes)| Element { 
+            name, 
+            attributes, 
+            children: vec![],
+        }
+    )
 }
 
 #[test]
@@ -90,5 +101,20 @@ fn attribute_parser() {
             ]
         )),
         attributes().parse(" one=\"1\" two=\"2\"")
+    );
+}
+
+#[test]
+fn single_element_parser() {
+    assert_eq!(
+        Ok((
+            "",
+            Element {
+                name: "div".to_string(),
+                attributes: vec![("class".to_string(), "float".to_string())],
+                children: vec![]
+            }
+        )),
+        single_element().parse("<div class=\"float\"/>")
     );
 }

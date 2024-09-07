@@ -186,3 +186,7 @@ pub fn attribute_pair<'a>() -> impl Parser<'a, (String, String)> {
 pub fn attributes<'a>() -> impl Parser<'a, Vec<(String, String)>> {
     zero_or_more(right(space1(), attribute_pair()))
 }
+
+pub fn element_start<'a>() -> impl Parser<'a, (String, Vec<(String, String)>)> {
+    right(match_literal("<"), pair(identifier, attributes()))
+}
