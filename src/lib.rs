@@ -51,12 +51,17 @@ where
     P1: Fn(&str) -> Result<(&str, R1), &str>,
     P2: Fn(&str) -> Result<(&str, R2), &str>,
 {
-    move |input: &str| match parser1(input) {
-        Ok((next_input, result1)) => match parser2(next_input) {
-            Ok((remainder, result2)) => Ok((remainder, (result1, result2))),
-            Err(err) => Err(err),
-        },
-        Err(err) => Err(err),
+    // move |input: &str| match parser1(input) {
+    //     Ok((next_input, result1)) => match parser2(next_input) {
+    //         Ok((remainder, result2)) => Ok((remainder, (result1, result2))),
+    //         Err(err) => Err(err),
+    //     },
+    //     Err(err) => Err(err),
+    // }
+    move |input: &str| {
+        parser1(input).and_then(|(next, r1)| {
+            parser2(next).and_then(|(remainder, r2)| Ok((remainder, (r1, r2))))
+        })
     }
 }
 
