@@ -65,6 +65,17 @@ where
     }
 }
 
+fn map<P, F, A, B>(parser: P, map_fn: F) -> impl Fn(&str) -> Result<(&str, B), &str>
+where
+    P: Fn(&str) -> Result<(&str, A), &str>,
+    F: Fn(A) -> B,
+{
+    move |input: &str| match parser(input) {
+        Ok((next, result)) => Ok((next, map_fn(result))),
+        Err(err) => Err(err),
+    }
+}
+
 #[test]
 fn a_parser() {
     assert_eq!(the_letter_a("a"), Ok(("", ())));
